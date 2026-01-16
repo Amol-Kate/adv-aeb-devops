@@ -1,0 +1,14 @@
+{
+  "aeb": {
+    "ttc_threshold_seconds": 1.5,
+    "max_allowed_collision": 0,
+    "max_false_positive_rate": 0.1
+  },
+  "vehicle_dynamics": {
+    "max_jerk_mps3": 5.0,
+    "max_deceleration_mps2": 9.0
+  },
+  "simulation": {
+    "min_scenario_pass_rate": 0.95
+  }
+}
