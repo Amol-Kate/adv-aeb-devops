@@ -1,0 +1,12 @@
+{
+  "model_name": "pedestrian_detector_mock",
+  "model_type": "rule_based",
+  "version": "0.1.0",
+  "framework": "python",
+  "training_data": "N/A (mock model)",
+  "validated_on": "simulated",
+  "intended_function": "Pedestrian distance estimation for AEB",
+  "safety_critical": true,
+  "owner": "AEB Team",
+  "status": "approved"
+}
