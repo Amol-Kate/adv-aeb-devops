@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>aeb_system</name>
+  <version>0.0.1</version>
+  <description>
+    Autonomous Emergency Braking (AEB) ROS 2 Python package.
+    Provides sensor, perception, decision, and control nodes.
+  </description>
+
+  <!-- Maintainer -->
+  <maintainer email="dev@example.com">AEB Dev</maintainer>
+
+  <!-- License -->
+  <license>Apache-2.0</license>
+
+  <!-- Build system -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <!-- Runtime dependencies -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+  <!-- Test dependencies -->
+  <test_depend>pytest</test_depend>
+
+</package>
