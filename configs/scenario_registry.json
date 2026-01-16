@@ -1,0 +1,59 @@
+{
+  "scenario_set": "aeb_core_scenarios",
+  "version": "0.1.0",
+  "domain": "urban",
+  "simulator": "CARLA",
+  "scenarios": [
+    {
+      "id": "AEB-SCN-001",
+      "name": "Pedestrian Crossing - Day",
+      "description": "Pedestrian crosses road in front of ego vehicle at moderate speed during daytime.",
+      "environment": {
+        "weather": "clear",
+        "lighting": "day"
+      },
+      "ego_vehicle": {
+        "initial_speed_mps": 10.0
+      },
+      "expected_behavior": {
+        "collision": false,
+        "aeb_activation": true
+      },
+      "safety_relevance": "ISO 26262 / SOTIF"
+    },
+    {
+      "id": "AEB-SCN-002",
+      "name": "Pedestrian Crossing - Night",
+      "description": "Pedestrian crosses road at night with reduced visibility.",
+      "environment": {
+        "weather": "clear",
+        "lighting": "night"
+      },
+      "ego_vehicle": {
+        "initial_speed_mps": 8.0
+      },
+      "expected_behavior": {
+        "collision": false,
+        "aeb_activation": true
+      },
+      "safety_relevance": "SOTIF"
+    },
+    {
+      "id": "AEB-SCN-003",
+      "name": "False Positive Check",
+      "description": "No pedestrian present. AEB must not activate.",
+      "environment": {
+        "weather": "clear",
+        "lighting": "day"
+      },
+      "ego_vehicle": {
+        "initial_speed_mps": 12.0
+      },
+      "expected_behavior": {
+        "collision": false,
+        "aeb_activation": false
+      },
+      "safety_relevance": "ISO 26262"
+    }
+  ]
+}
