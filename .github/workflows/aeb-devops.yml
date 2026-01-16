@@ -1,182 +1,137 @@
-name: AEB DevOps Pipeline
+name: AEB DevOps – 7 Layer Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
-    paths:
-      - "aeb_ws/**"
-      - "models/**"
-      - "data/**"
-      - "scenarios/**"
-      - "scripts/**"
-  pull_request:
     branches: [ main ]
+  pull_request:
+  workflow_dispatch:
 
 env:
   ROS_DISTRO: humble
-  WORKSPACE: aeb_ws
-  PACKAGE: aeb_system
   PYTHON_VERSION: "3.10"
-
-# ---------------------------------------------------------
-# LAYER 1: UNIFIED VERSIONING & TRACEABILITY
+  AEB_WS: aeb_ws
 
 jobs:
-  layer1-versioning:
-    name: L1 – Unified Versioning & Traceability
-    runs-on: ubuntu-latest
 
+# --------------------------------
+# LAYER 1 – VERSIONING & TRACEABILITY
+
+  layer1_versioning:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Capture code version
+      - name: Validate registries and configs
         run: |
-          echo "CODE_COMMIT=${GITHUB_SHA}" >> trace.env
+          python scripts/validate_json.py
 
-      - name: Capture model versions
+      - name: Generate CI traceability record
         run: |
-          ls models > model_versions.txt || true
+          python scripts/generate_ci_result.py
 
-      - name: Capture data versions (DVC)
-        run: |
-          if [ -f data.dvc ]; then
-            dvc status > data_versions.txt
-          fi
-
-      - name: Capture scenario versions
-        run: |
-          ls scenarios > scenario_versions.txt || true
-
-      - name: Store lineage artifacts
+      - name: Upload layer-1 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: lineage
-          path: |
-            trace.env
-            model_versions.txt
-            data_versions.txt
-            scenario_versions.txt
+          name: layer1-artifacts
+          path: artifacts/
 
+# --------------------------------
+# LAYER 2 – MODEL-AWARE CI
 
-# ---------------------------------------------------------
-# LAYER 2: MODEL-AWARE CI
-
-  layer2-model-aware-ci:
-    name: L2 – Model-Aware CI
+  layer2_ci:
     runs-on: ubuntu-latest
-    needs: layer1-versioning
+    needs: layer1_versioning
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Static & safety analysis
+      - name: Install Python dependencies
         run: |
-          pip install flake8
-          flake8 $WORKSPACE/src/${{ env.PACKAGE }} || true
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Setup ROS2
+      - name: Setup ROS 2 Humble
         uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: ${{ env.ROS_DISTRO }}
 
-      - name: Build ROS2 stack
+      - name: Build ROS2 workspace
         run: |
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          cd $WORKSPACE
-          colcon build
+          cd ${{ env.AEB_WS }}
+          colcon build --event-handlers console_direct+
 
-      - name: Run unit tests
+      - name: Run unit and chain tests
         run: |
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          cd $WORKSPACE
-          colcon test --packages-select ${{ env.PACKAGE }}
+          source ${{ env.AEB_WS }}/install/setup.bash
+          pytest tests/
 
-      - name: Model compatibility & drift check
-        run: |
-          python scripts/model_compatibility_check.py || true
+# --------------------------------
+# LAYER 3 – SIL INTEGRATION
 
-
-# ---------------------------------------------------------
-# LAYER 3: VIRTUALIZED SYSTEM INTEGRATION
-
-  layer3-virtual-integration:
-    name: L3 – Virtualized System Integration (SIL)
+  layer3_sil:
     runs-on: ubuntu-latest
-    needs: layer2-model-aware-ci
+    needs: layer2_ci
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build containerized AV stack
+      - name: Run SIL tests
         run: |
-          docker build -t aeb-sil -f docker/Dockerfile.sil .
+          python scripts/run_sil.py
 
-      - name: Run SIL stack
-        run: |
-          docker run --rm aeb-sil echo "SIL system booted"
+      - name: Upload SIL artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sil-results
+          path: artifacts/sil_results.json
 
+# --------------------------------
+# LAYER 4 – SIMULATION VALIDATION
 
-# ---------------------------------------------------------
-# LAYER 4: SIMULATION-DRIVEN VALIDATION
-
-  layer4-simulation:
-    name: L4 – Simulation-Driven Validation
+  layer4_simulation:
     runs-on: ubuntu-latest
-    needs: layer3-virtual-integration
+    needs: layer3_sil
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run CARLA scenarios
+      - name: Run scenario simulations
         run: |
-          python scripts/run_carla_scenarios.py \
-            --scenarios scenarios/ \
-            --weather rain,fog,night \
-            --output sim_results/
+          python scripts/run_simulation.py
 
-      - name: Upload simulation logs
+      - name: Upload simulation artifacts
         uses: actions/upload-artifact@v4
         with:
           name: simulation-results
-          path: sim_results/
+          path: artifacts/simulation_results.json
 
+# --------------------------------
+# LAYER 5 – SAFETY & COMPLIANCE GATE
 
-# ---------------------------------------------------------
-# LAYER 5: SAFETY & COMPLIANCE GATES
-
-  layer5-safety-gate:
-    name: L5 – Safety & Compliance Gates
+  layer5_safety_gate:
     runs-on: ubuntu-latest
-    needs: layer4-simulation
+    needs: layer4_simulation
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Evaluate safety KPIs
+      - name: Execute safety gate
         run: |
-          python scripts/safety_kpi_evaluator.py sim_results/
+          python scripts/safety_gate.py
 
-      - name: Check regression & coverage
-        run: |
-          python scripts/scenario_coverage_check.py sim_results/
+# --------------------------------
+# LAYER 6 – CONTROLLED DELIVERY
 
-      - name: ISO 26262 / SOTIF evidence check
-        run: |
-          python scripts/compliance_check.py
-
-
-# ---------------------------------------------------------
-# LAYER 6: CONTROLLED CONTINUOUS DELIVERY
-# 
-  layer6-controlled-cd:
-    name: L6 – Controlled Continuous Delivery
+  layer6_release:
     runs-on: ubuntu-latest
-    needs: layer5-safety-gate
-    if: github.ref == 'refs/heads/main'
+    needs: layer5_safety_gate
 
     steps:
       - uses: actions/checkout@v4
@@ -185,39 +140,22 @@ jobs:
         run: |
           python scripts/create_release.py
 
-      - name: Tag release candidate
-        run: |
-          git tag -a "RC-${GITHUB_RUN_NUMBER}" -m "Safety-approved RC"
-
-      - uses: actions/upload-artifact@v4
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
         with:
-          name: release-candidate
+          name: aeb-release
           path: release/
 
+# --------------------------------
+# LAYER 7 – CONTINUOUS FEEDBACK LOOP
 
-# ---------------------------------------------------------
-# LAYER 7: CONTINUOUS LEARNING & FEEDBACK LOOP
-# 
-  layer7-learning:
-    name: L7 – Continuous Learning & Feedback
+  layer7_feedback:
     runs-on: ubuntu-latest
-    needs: layer6-controlled-cd
+    needs: layer6_release
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ingest fleet telemetry
+      - name: Feedback loop placeholder
         run: |
-          python scripts/ingest_fleet_logs.py || true
-
-      - name: Mine failure patterns
-        run: |
-          python scripts/failure_pattern_mining.py || true
-
-      - name: Generate new scenarios & data
-        run: |
-          python scripts/generate_new_scenarios.py || true
-
-      - name: Feedback to Layer 1 & 2
-        run: |
-          echo "Feedback loop closed: new data & scenarios available"
+          echo "Feedback loop complete – ready for retraining & scenario updates"
