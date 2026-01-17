@@ -27,13 +27,15 @@ print(f"[SIM] KPIs written to {output_dir}/kpis.json")
 import json
 import os
 
+print("[SIM] Running simulation (mock)...")
+
 os.makedirs("artifacts/simulation", exist_ok=True)
 
 kpi = {
     "collision": False,
-    "min_ttc": 2.3,
-    "max_deceleration": 6.5,
-    "scenario_coverage": 0.92
+    "min_ttc": 2.4,
+    "max_deceleration": 6.2,
+    "scenario_coverage": 0.93
 }
 
 with open("artifacts/simulation/kpi_results.json", "w") as f:
