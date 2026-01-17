@@ -71,7 +71,7 @@ jobs:
           source /opt/ros/humble/setup.bash
           cd aeb_ws
           source install/setup.bash
-          pytest ../tests
+          pytest
 
 
 # --------------------------------
