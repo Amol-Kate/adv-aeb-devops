@@ -113,6 +113,13 @@ jobs:
         with:
           name: simulation-results
           path: artifacts/simulation_results.json
+    
+      - name: Upload simulation KPIs
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-kpis
+          path: artifacts/simulation/kpi_results.json
+
 
 # --------------------------------
 # LAYER 5 – SAFETY & COMPLIANCE GATE
@@ -123,6 +130,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Download simulation KPIs
+        uses: actions/download-artifact@v4
+        with:
+          name: simulation-kpis
+          path: artifacts/simulation
+
 
       - name: Execute safety gate
         run: |
