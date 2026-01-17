@@ -7,16 +7,15 @@ setup(
     version='0.0.1',
     packages=[package_name],
     data_files=[
-        # Required by ament_python
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='AEB Dev',
-    maintainer_email='dev@example.com',
-    description='Autonomous Emergency Braking (AEB) ROS 2 Python package',
+    maintainer='Amol',
+    maintainer_email='you@example.com',
+    description='Automatic Emergency Braking ROS2 nodes',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
@@ -24,4 +23,7 @@ setup(
             'camera_node = aeb_system.camera_node:main',
             'pedestrian_detector = aeb_system.pedestrian_detector:main',
             'aeb_decision_node = aeb_system.aeb_decision_node:main',
-            'vehicle_cont_
+            'vehicle_control_node = aeb_system.vehicle_control_node:main',
+        ],
+    },
+)
