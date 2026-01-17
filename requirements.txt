@@ -5,6 +5,7 @@ jsonschema>=4.0
 
 # Testing
 pytest>=7.0
+lark>=1.1.5
 
 # Linting / static analysis (Model-Aware CI)
 flake8>=6.0
