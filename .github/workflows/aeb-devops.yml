@@ -1,4 +1,4 @@
-name: AEB DevOps – 7 Layer Pipeline
+name: AEB DevOps
 
 on:
   push:
@@ -64,8 +64,8 @@ jobs:
         run: |
           source /opt/ros/humble/setup.bash
           cd aeb_ws
-          colcon build  
-         
+          colcon build --symlink-install
+
       - name: Run unit and chain tests
         run: |
           source /opt/ros/humble/setup.bash
