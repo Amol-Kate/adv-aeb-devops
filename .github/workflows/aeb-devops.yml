@@ -66,11 +66,19 @@ jobs:
           cd ${{ env.AEB_WS }}
           colcon build --event-handlers console_direct+
 
+
       - name: Run unit and chain tests
         run: |
           source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
-          source ${{ env.AEB_WS }}/install/setup.bash
-          pytest tests/
+          cd ${{ env.AEB_WS }}
+          source install/setup.bash
+          pytest ../tests
+
+      #- name: Run unit and chain tests
+        #run: |
+          #source /opt/ros/${{ env.ROS_DISTRO }}/setup.bash
+          #source ${{ env.AEB_WS }}/install/setup.bash
+          #pytest tests/
 
 # --------------------------------
 # LAYER 3 – SIL INTEGRATION
