@@ -7,7 +7,8 @@ import json
 import sys
 from pathlib import Path
 
-KPI_FILE = Path("sim_results/kpis.json")
+# KPI_FILE = Path("sim_results/kpis.json")
+KPI_FILE = "artifacts/simulation/kpi_results.json"
 
 # Safety thresholds (can be ASIL-tuned later)
 MIN_TTC_THRESHOLD = 1.5      # seconds
